@@ -23,7 +23,7 @@ Export Nasabah
                     @endif        
                 @endif -->
 
-                    <form method="POST" action="#" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('exportNasabah.upload') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
                         <label for="name" class="form-label">Upload File :</label>

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ExportNasabah;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,12 +59,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
 
         Route::group(['prefix' => 'exportNasabah'], function() {
             Route::get('/', [App\Http\Controllers\ExportNasabah::class, 'index'])->name('exportNasabah.index');
-            /*Route::get('/create', 'PEPCheckController@create')->name('pepCheck.create');
-            Route::get('/detail/{id}', [PEPCheckController::class, 'show']);
-            Route::get('/delete/{id}', [PEPCheckController::class, 'delete']);
-            
-            Route::post('/upload', 'PEPCheckController@upload')->name('pepCheck.upload');            
-            Route::get('/download', [PEPCheckController::class, 'download'])->name('pepCheck.download');*/
+            Route::post('/upload', 'ExportNasabah@upload')->name('exportNasabah.upload');
         });
     });
 });
