@@ -55,5 +55,15 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
             Route::patch('/{user}/update', 'UsersController@update')->name('users.update');
             Route::delete('/{user}/delete', 'UsersController@destroy')->name('users.destroy');
         });
+
+        Route::group(['prefix' => 'exportNasabah'], function() {
+            Route::get('/', [App\Http\Controllers\ExportNasabah::class, 'index'])->name('exportNasabah.index');
+            /*Route::get('/create', 'PEPCheckController@create')->name('pepCheck.create');
+            Route::get('/detail/{id}', [PEPCheckController::class, 'show']);
+            Route::get('/delete/{id}', [PEPCheckController::class, 'delete']);
+            
+            Route::post('/upload', 'PEPCheckController@upload')->name('pepCheck.upload');            
+            Route::get('/download', [PEPCheckController::class, 'download'])->name('pepCheck.download');*/
+        });
     });
 });

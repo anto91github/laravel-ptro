@@ -9,6 +9,15 @@
     </li>
 
     <li class="nav-item">
+        <a class="nav-link {{ request()->is('users*') ? 'active' : ''}}" href="{{ route('exportNasabah.index') }}">
+            <svg class="nav-icon">
+                <use xlink:href="{{ asset('icons/coreui.svg#cil-user') }}"></use>
+            </svg>
+            Export Nasabah
+        </a>
+    </li>
+
+    <li class="nav-item">
         <a class="nav-link {{ request()->is('users*') ? 'active' : ''}}" href="{{ route('users.index') }}">
             <svg class="nav-icon">
                 <use xlink:href="{{ asset('icons/coreui.svg#cil-user') }}"></use>
