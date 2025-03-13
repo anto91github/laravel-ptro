@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\BcasAkun;
+use App\Models\BcasNasabahDomisili;
+use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -15,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Illuminate\Database\QueryException;
 
 class ExportNasabah extends Controller
 {
@@ -76,35 +79,60 @@ class ExportNasabah extends Controller
             $uuid = (string) Str::uuid();
 
             $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
+            $this->insertBcasNasabahDomisili($row, $key, $uuid);
         }
     }
 
     public function insertBcasAkun($data, $key, $client_id, $username, $uuid)
     {
-        $client_id = 'C'.$key;
-        $username = 'JKU-'.$client_id;
         $token_best = base64_encode($data['tanggal_lahir'].env('TOKEN_BEST'));
 
+        try{
+            BcasAkun::create([
+                'id' => $uuid,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'deleted' => false,
+                'email' => $data['email'],
+                'nohp' => $data['nohp'],
+                'username' => $username,
+                'password' => bcrypt($data['tanggal_lahir']),
+                'status' => 1,
+                'verifikasi_nohp' => true,
+                'verifikasi_email' => true,
+                'id_device' => 'b8f56805-35b7-4b84-a350-d75cd35e9e9f',
+                'state' => 10,
+                'sync_best' => false,
+                'client_id' => $client_id,
+                'token_best' =>$token_best,
+                'platform' => 'web',
+                'source_platform' => 'Web BCAS'
+            ]);
 
-        BcasAkun::create([
+            ExportLog::create([
+                'table_process' => 'bcas_akun',
+                'username' => $username,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'status' => 'SUCCESS',
+                'error_message' => '-'
+            ]);
+
+        } catch (QueryException $e) {
+            ExportLog::create([
+                'table_process' => 'bcas_akun',
+                'username' => $username,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'status' => 'FAILED',
+                'error_message' => $e->getMessage()
+            ]);
+        }
+        
+    }
+
+    public function insertBcasNasabahDomisili($data, $key, $uuid)
+    {
+        /*BcasNasabahDomisili::create([
             'id' => $uuid,
-            'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-            'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
-            'deleted' => false,
-            'email' => $data['email'],
-            'nohp' => $data['nohp'],
-            'username' => $username,
-            'password' => bcrypt($data['tanggal_lahir']),
-            'status' => 1,
-            'verifikasi_nohp' => true,
-            'verifikasi_email' => true,
-            'id_device' => 'b8f56805-35b7-4b84-a350-d75cd35e9e9f',
-            'state' => 10,
-            'sync_best' => false,
-            'client_id' => $client_id,
-            'token_best' =>$token_best,
-            'platform' => 'web',
-            'source_platform' => 'Web BCAS'
-        ]);
+        ]);*/
     }
 }
