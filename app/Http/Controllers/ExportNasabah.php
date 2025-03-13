@@ -55,6 +55,62 @@ class ExportNasabah extends Controller
                     'nama_lengkap' => $row[4],
                     'tempat_lahir' => $row[5],
                     'tanggal_lahir' => $row[6],
+                    'jenis_kelamin' => $row[7],
+                    'status_perkawinan' => $row[8],
+                    'agama' => $row[9],
+                    'alamat_ktp' => $row[10],
+                    'rt_ktp' => $row[11],
+                    'rw_ktp' => $row[12],
+                    'kota_ktp' => $row[13],
+                    'provinsi_ktp' => $row[14],
+                    'kode_pos_ktp' => $row[15],
+                    'nama_ibu_kandung' => $row[16],
+                    'kecamatan_ktp' => $row[17],
+                    'kelurahan_ktp' => $row[18],
+                    'jumlah_tanggungan' => $row[19],
+                    'nama_pasangan' => $row[20],
+                    'no_telp_pasangan'=> $row[21],
+                    'negara_lahir' => $row[22],
+                    'pendidikan_terakhir' => $row[23],
+                    'pekerjaan' => $row[24],
+                    'jabatan' => $row[25],
+                    'nama_perusahaan' => $row[26],
+                    'bidang_usaha' => $row[27],
+                    'hubungan_kerja' => $row[28],
+                    'tahun_lama_kerja' => $row[29],
+                    'bulan_lama_kerja' => $row[30],
+                    'alamat_office' => $row[31],
+                    'kelurahan_office' => $row[32],
+                    'kecamatan_office' => $row[33],
+                    'kota_office' => $row[34],
+                    'provinsi_office' => $row[35],
+                    'rt_office' => $row[36],
+                    'rw_office' => $row[37],
+                    'kode_pos_office' => $row[38],
+                    'tlp_office' => $row[39],
+                    'status_tempat_tinggal' => $row[40],
+                    'menempati_sejak' => $row[41],
+                    'tujuan_investasi' => $row[42],
+                    'toleransi_terhadap_resiko' => $row[43],
+                    'kekayaan_bersih' => $row[44],
+                    'pendapatan_per_tahun' => $row[45],
+                    'nama_bank_tujuan' => $row[46],
+                    'no_rekening_tujuan' => $row[47],
+                    'nama_rekening_tujuan' => $row[48],
+                    'tipe_membership_bca' => $row[49],
+                    'nama_ahli_waris' => $row[50],
+                    'hubungan_ahli_waris' => $row[51],
+                    'tlp_alih_waris' => $row[52],
+                    'alamat_domisili' => $row[53],
+                    'rt_domisili' => $row[54],
+                    'rw_domisili' => $row[55],
+                    'kelurahan_domisili' => $row[56],
+                    'kecamatan_domisili' => $row[57],
+                    'kota_domisili' => $row[58],
+                    'provinsi_domisili' => $row[59],
+                    'kode_pos_domisili' => $row[60],
+                    'is_npwp' => $row[61],
+                    'npwp_no' => $row[62],
                 ];
             }
         }
@@ -128,8 +184,13 @@ class ExportNasabah extends Controller
 
     public function insertBcasNasabahDomisili($data, $key, $uuid)
     {
-        /*BcasNasabahDomisili::create([
-            'id' => $uuid,
-        ]);*/
+        /*try{
+            BcasNasabahDomisili::create([
+                'id' => $uuid,
+                'alamat' => 
+            ]);
+        } catch (QueryException $e) {
+
+        }*/
     }
 }
