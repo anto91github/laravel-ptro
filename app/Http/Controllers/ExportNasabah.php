@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Concerns\WithMappedCells;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
 class ExportNasabah extends Controller
 {
@@ -62,17 +63,23 @@ class ExportNasabah extends Controller
         $this->insertData($results);
         Session::flash('statusExport','success');
         Session::flash('messageExport','Data selesai di proses');
+
+        return redirect('/exportNasabah');
     }
 
     public function insertData($data)
     {
         foreach($data as $key=>$row) {
             // insert into bcas_akun
-            $this->insertBcasAkun($row, $key);
+            $client_id = 'C'.$key;
+            $username = 'JKU-'.$client_id;
+            $uuid = (string) Str::uuid();
+
+            $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
         }
     }
 
-    public function insertBcasAkun($data, $key)
+    public function insertBcasAkun($data, $key, $client_id, $username, $uuid)
     {
         $client_id = 'C'.$key;
         $username = 'JKU-'.$client_id;
@@ -80,6 +87,7 @@ class ExportNasabah extends Controller
 
 
         BcasAkun::create([
+            'id' => $uuid,
             'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
             'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
             'deleted' => false,

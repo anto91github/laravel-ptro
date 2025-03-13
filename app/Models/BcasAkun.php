@@ -18,13 +18,13 @@ class BcasAkun extends Model
 
     protected $guarded = [];
 
-    protected static function boot()
-    {
-        parent::boot();
+    // protected static function boot()
+    // {
+    //     parent::boot();
 
-        static::creating(function ($model) {
-            $model->id = (string) Str::uuid(); // Menghasilkan UUID saat membuat model
-        });
-    }
+    //     static::creating(function ($model) {
+    //         $model->id = (string) Str::uuid(); // Menghasilkan UUID saat membuat model
+    //     });
+    // }
 
 }

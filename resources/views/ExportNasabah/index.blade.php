@@ -11,17 +11,17 @@ Export Nasabah
             <h5 class="card-title">Bulk Export Nasabah</h5>
             <div class="p-4 rounded">
                 <div class="container mt-4">
-                <!-- @if (Session::has('statusUpload'))
-                    @if (Session::get('statusUpload') == 'success')
+                @if (Session::has('statusExport'))
+                    @if (Session::get('statusExport') == 'success')
                         <div class="alert alert-success" id="flash-message" role="alert">
-                            {{Session::get('messageUpload')}}
+                            {{Session::get('messageExport')}}
                         </div>
                     @else
                         <div class="alert alert-danger" id="flash-message" role="alert">
-                            {{Session::get('messageUpload')}}
+                            {{Session::get('messageExport')}}
                         </div>
                     @endif        
-                @endif -->
+                @endif
 
                     <form method="POST" action="{{ route('exportNasabah.upload') }}" enctype="multipart/form-data">
                     @csrf
