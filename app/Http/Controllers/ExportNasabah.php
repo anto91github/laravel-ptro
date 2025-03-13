@@ -83,6 +83,16 @@ class ExportNasabah extends Controller
         }
     }
 
+    public function addLogs($table_name, $username, $status, $error_message){
+        ExportLog::create([
+            'table_process' => $table_name,
+            'username' => $username,
+            'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+            'status' => $status,
+            'error_message' => $error_message
+        ]);
+    }
+
     public function insertBcasAkun($data, $key, $client_id, $username, $uuid)
     {
         $token_best = base64_encode($data['tanggal_lahir'].env('TOKEN_BEST'));
@@ -108,23 +118,10 @@ class ExportNasabah extends Controller
                 'platform' => 'web',
                 'source_platform' => 'Web BCAS'
             ]);
-
-            ExportLog::create([
-                'table_process' => 'bcas_akun',
-                'username' => $username,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-                'status' => 'SUCCESS',
-                'error_message' => '-'
-            ]);
+            $this->addLogs('bcas_akun', $username, 'SUCCESS', '-');
 
         } catch (QueryException $e) {
-            ExportLog::create([
-                'table_process' => 'bcas_akun',
-                'username' => $username,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-                'status' => 'FAILED',
-                'error_message' => $e->getMessage()
-            ]);
+            $this->addLogs('bcas_akun', $username, 'FAILED', $e->getMessage());
         }
         
     }
