@@ -13,6 +13,7 @@ class BcasNasabahDomisili extends Model
 
     protected $keyType = 'string'; // Mengatur tipe kunci menjadi string
     public $incrementing = false; // Menonaktifkan auto-increment
+    public $timestamps = false;
 
     protected $guarded = [];
 }
