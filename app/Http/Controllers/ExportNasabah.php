@@ -143,6 +143,7 @@ class ExportNasabah extends Controller
             } else {
                 // $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
                 $this->insertBcasNasabahDomisili($row, $key, $uuid);
+                $this->insertBcasNpwp($data, $username, $uuid);
             }
         }
     }
@@ -190,29 +191,30 @@ class ExportNasabah extends Controller
         }
     }
 
-    public function insertBcasNpwp($data, $key, $client_id, $username, $uuid)
+    public function insertBcasNpwp($data, $username, $uuid)
     {
+        $validate = false;
+        $no_npwp = '';
+
+        if ($data['is_npwp'] = 'Ada (Pribadi)') {
+            $validate = true;
+        }
+
+        if (strlen($data['npwp_no']) > 13) {
+            $no_npwp = $data['npwp_no'];
+        }
 
         try {
             BcasNasabahNpwp::create([
                 'id' => $uuid,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-                'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
-                'no_npwp' => $data['npwp_no'],
-                'alamat' => $data['alamat_ktp'],
-                'rt' => $data['rt_ktp'],
-                'rw' => $data['rw_ktp'],
-                'kelurahan' => $data['kelurahan_ktp'],
-                'kecamatan' => $data['kecamatan_ktp'],
-                'id_kota' => $data['kota_ktp'],
-                'id_provinsi' => $data['provinsi_ktp'],
-                'kodepos' => $data['kode_pos_ktp'],
-                // 'file_path' => $data['kode_pos_ktp'],
-
+                'no_npwp' => $no_npwp,
+                'validate' => $validate,
+                'is_use_nik' => true,
+                'is_file_upload_npwp' => true
             ]);
-            $this->addLogs('bcas_akun', $username, 'SUCCESS', '-');
+            $this->addLogs('bca_nasabah_npwp', $username, 'SUCCESS', '-');
         } catch (QueryException $e) {
-            $this->addLogs('bcas_akun', $username, 'FAILED', $e->getMessage());
+            $this->addLogs('bca_nasabah_npwp', $username, 'FAILED', $e->getMessage());
         }
     }
 
