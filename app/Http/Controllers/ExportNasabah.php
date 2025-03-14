@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\BcasAkun;
 use App\Models\BcasNasabahDomisili;
+use App\Models\BcasNasabahNpwp;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
@@ -48,7 +49,7 @@ class ExportNasabah extends Controller
         $results = [];
         foreach ($data[0] as $key => $row) {
             if ($key >= 1) { // Mulai dari baris ke 2
-                $results []= [
+                $results[] = [
                     'email' => $row[1], // Ambil kolom C
                     'nohp' => $row[2],
                     'nik' => $row[3],
@@ -69,7 +70,7 @@ class ExportNasabah extends Controller
                     'kelurahan_ktp' => $row[18],
                     'jumlah_tanggungan' => $row[19],
                     'nama_pasangan' => $row[20],
-                    'no_telp_pasangan'=> $row[21],
+                    'no_telp_pasangan' => $row[21],
                     'negara_lahir' => $row[22],
                     'pendidikan_terakhir' => $row[23],
                     'pekerjaan' => $row[24],
@@ -115,23 +116,23 @@ class ExportNasabah extends Controller
             }
         }
         // Menghapus elemen kosong
-        $results = array_filter($results, function($item) {
+        $results = array_filter($results, function ($item) {
             return !is_null($item['email']) && !is_null($item['nohp']);
         });
 
         $this->insertData($results);
-        Session::flash('statusExport','success');
-        Session::flash('messageExport','Data selesai di proses');
+        Session::flash('statusExport', 'success');
+        Session::flash('messageExport', 'Data selesai di proses');
 
         return redirect('/exportNasabah');
     }
 
     public function insertData($data)
     {
-        foreach($data as $key=>$row) {
+        foreach ($data as $key => $row) {
             // insert into bcas_akun
-            $client_id = 'C'.$key;
-            $username = 'JKU-'.$client_id;
+            $client_id = 'C' . $key;
+            $username = 'JKU-' . $client_id;
             $uuid = (string) Str::uuid();
 
             $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
@@ -139,7 +140,8 @@ class ExportNasabah extends Controller
         }
     }
 
-    public function addLogs($table_name, $username, $status, $error_message){
+    public function addLogs($table_name, $username, $status, $error_message)
+    {
         ExportLog::create([
             'table_process' => $table_name,
             'username' => $username,
@@ -151,9 +153,9 @@ class ExportNasabah extends Controller
 
     public function insertBcasAkun($data, $key, $client_id, $username, $uuid)
     {
-        $token_best = base64_encode($data['tanggal_lahir'].env('TOKEN_BEST'));
+        $token_best = base64_encode($data['tanggal_lahir'] . env('TOKEN_BEST'));
 
-        try{
+        try {
             BcasAkun::create([
                 'id' => $uuid,
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
@@ -170,16 +172,44 @@ class ExportNasabah extends Controller
                 'state' => 10,
                 'sync_best' => false,
                 'client_id' => $client_id,
-                'token_best' =>$token_best,
+                'token_best' => $token_best,
                 'platform' => 'web',
                 'source_platform' => 'Web BCAS'
             ]);
             $this->addLogs('bcas_akun', $username, 'SUCCESS', '-');
-
         } catch (QueryException $e) {
             $this->addLogs('bcas_akun', $username, 'FAILED', $e->getMessage());
         }
-        
+    }
+
+    public function insertBcasNpwp($data, $key, $client_id, $username, $uuid)
+    {
+
+        try {
+            BcasNasabahNpwp::create([
+                'id' => $uuid,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
+
+                'no_npwp' => $data['email'],
+                'nohp' => $data['nohp'],
+                'username' => $username,
+                'password' => bcrypt($data['tanggal_lahir']),
+                'status' => 1,
+                'verifikasi_nohp' => true,
+                'verifikasi_email' => true,
+                'id_device' => 'b8f56805-35b7-4b84-a350-d75cd35e9e9f',
+                'state' => 10,
+                'sync_best' => false,
+                'client_id' => $client_id,
+                'token_best' => $token_best,
+                'platform' => 'web',
+                'source_platform' => 'Web BCAS'
+            ]);
+            $this->addLogs('bcas_akun', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bcas_akun', $username, 'FAILED', $e->getMessage());
+        }
     }
 
     public function insertBcasNasabahDomisili($data, $key, $uuid)
