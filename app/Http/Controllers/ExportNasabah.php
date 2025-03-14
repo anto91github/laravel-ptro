@@ -140,8 +140,8 @@ class ExportNasabah extends Controller
             } else if (BcasNasabahKTP::where('nik', $row['nik'])->exists()){
                 $this->addLogs('validasi-awal', $username, 'FAILED', 'NIK sudah terdaftar');
             }else {
-                // $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
-                $this->insertBcasNasabahDomisili($row, $key, $uuid);
+                $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
+                $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
             }
 
         }
@@ -160,7 +160,6 @@ class ExportNasabah extends Controller
     public function insertBcasAkun($data, $key, $client_id, $username, $uuid)
     {
         $token_best = base64_encode($data['tanggal_lahir'].env('TOKEN_BEST'));
-
 
         try{
             BcasAkun::create([
@@ -191,7 +190,7 @@ class ExportNasabah extends Controller
         
     }
 
-    public function insertBcasNasabahDomisili($data, $key, $uuid)
+    public function insertBcasNasabahDomisili($data, $key, $username, $uuid)
     {
         try{
             BcasNasabahDomisili::create([
@@ -199,10 +198,15 @@ class ExportNasabah extends Controller
                 'alamat' => $data['alamat_domisili'],
                 'rt'=> $data['rt_domisili'],
                 'rw'=> $data['rw_domisili'],
-                'kelurahan'=> $data['kelurahan_domisili']
+                'kelurahan'=> $data['kelurahan_domisili'],
+                'kecamatan'=> $data['kecamatan_domisili'],
+                'id_kota'=> $data['kota_domisili'],
+                'id_provinsi'=> $data['provinsi_domisili'],
+                'kodepos'=>$data['kode_pos_domisili']
             ]);
+            $this->addLogs('bca_nasabah_domisili', $username, 'SUCCESS', '-');
         } catch (QueryException $e) {
-
+            $this->addLogs('bca_nasabah_domisili', $username, 'FAILED', $e->getMessage());
         }
     }
 }
