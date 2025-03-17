@@ -10,6 +10,7 @@ use App\Models\BcasNasabahNpwp;
 use App\Models\BcasNasabahKTP;
 use App\Models\BcasPernyataan;
 use App\Models\BcasDataPekerjaan;
+use App\Models\BcasNasabahRekening;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
@@ -151,9 +152,10 @@ class ExportNasabah extends Controller
                     $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                     $this->insertBcasNpwp($row, $username, $uuid);
                     $this->insertBcasKTP($row, $key, $username, $uuid);
-                    $this->insertDataPekerjaan($row, $username, $uuid);
+                    $this->insertDataPekerjaan($row, $username, $uuid);                    
                     $this->insertBcasPernyataan($row, $username, $uuid);
                     $this->insertBcasBO($row, $username, $uuid);
+                    $this->insertNasabahRekening($row, $username, $uuid);
                 }
             }
         }
@@ -360,6 +362,31 @@ class ExportNasabah extends Controller
             $this->addLogs('bcas_nasabah_data_pekerjaan', $username, 'SUCCESS', '-');
         } catch (QueryException $e) {
             $this->addLogs('bcas_nasabah_data_pekerjaan', $username, 'FAILED', $e->getMessage());
+        }
+    }
+
+    public function insertNasabahRekening($data, $username, $uuid)
+    {
+        $nama_bank = $data['nama_bank_tujuan'];
+
+        if($data['nama_bank_tujuan'] == 'blu') {
+            $nama_bank = 'BCAD';
+        }
+
+        try{
+            BcasNasabahRekening::create([
+                'id' => $uuid,
+                'kode_bank' => $nama_bank,
+                'nomor_rekening' => $data['no_rekening_tujuan'],
+                'is_karyawan' => false,
+                'is_sharedata_blu' => false,
+                'is_blucc_done' =>  false,
+                'is_create_acc_blu' => false,
+                'kode_hybrid' => 232 // Online
+            ]);
+            $this->addLogs('bcas_nasabah_rekening', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bcas_nasabah_rekening', $username, 'FAILED', $e->getMessage());
         }
     }
 }
