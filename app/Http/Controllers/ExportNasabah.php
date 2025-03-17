@@ -149,6 +149,7 @@ class ExportNasabah extends Controller
                 $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                 $this->insertBcasNpwp($row, $username, $uuid);
                 $this->insertBcasKTP($row, $key, $username, $uuid);
+                $this->insertDataPekerjaan($row, $username, $uuid);
                 $this->insertBcasPernyataan($row, $username, $uuid);
                 $this->insertBcasBO($row, $username, $uuid);
             }
@@ -318,6 +319,42 @@ class ExportNasabah extends Controller
             $this->addLogs('bcas_nasabah_ktp', $username, 'SUCCESS', '-');
         } catch (QueryException $e) {
             $this->addLogs('bcas_nasabah_ktp', $username, 'FAILED', $e->getMessage());
+        }
+    }
+
+    public function insertDataPekerjaan($data, $username, $uuid)
+    {
+        try {
+            BcasDataPekerjaan::create([
+                'id' => $uuid,
+                'sumber_dana' => 'Gaji',
+                'pekerjaan' => $data['pekerjaan'],
+                'jabatan' => $data['jabatan'],
+                'nama_perusahaan' => $data['nama_perusahaan'],
+                'bidang_usaha' => $data['bidang_usaha'],
+                'hubungan_kerja' => $data['hubungan_kerja'],
+                'lama_kerja' => $data['tahun_lama_kerja'],
+                'alamat_perusahaan' => $data['alamat_office'],
+                'kelurahan' => $data['kelurahan_office'],
+                'kecamatan' => $data['kecamatan_office'],
+                'id_kota' => $data['kota_office'],
+                'id_provinsi' => $data['provinsi_office'],
+                'kodepos' => $data['kode_pos_office'],
+                'telp_perusahaan' => $data['tlp_office'],
+                'status_tempat_tinggal' => $data['status_tempat_tinggal'],
+                'menempati_sejak' => $data['menempati_sejak'],
+                'tujuan_investasi' => $data['tujuan_investasi'],
+                'toleransi_terhadap_resiko' => $data['toleransi_terhadap_resiko'],
+                'kekayaan_bersih' => $data['kekayaan_bersih'],
+                'pendapatan_per_tahun' => $data['pendapatan_per_tahun'],
+                'rt'=> $data['rt_office'],
+                'rw' => $data['rw_office'],
+                'lama_bulan_kerja' => $data['bulan_lama_kerja'],
+                'id_detail_pekerjaan' => 9 // pegawai swasta
+            ]);
+            $this->addLogs('bcas_nasabah_data_pekerjaan', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bcas_nasabah_data_pekerjaan', $username, 'FAILED', $e->getMessage());
         }
     }
 }
