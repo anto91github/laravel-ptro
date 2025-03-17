@@ -7,6 +7,7 @@ use App\Models\BcasAkun;
 use App\Models\BcasNasabahDomisili;
 use App\Models\BcasNasabahNpwp;
 use App\Models\BcasNasabahKTP;
+use App\Models\BcasPernyataan;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
@@ -135,7 +136,8 @@ class ExportNasabah extends Controller
             // insert into bcas_akun
             $client_id = strtoupper(Str::random(4));
             $username = 'JKU' . $client_id;
-            $uuid = (string) Str::uuid();
+            $uuid = (string) Str::uuid();;
+
 
             if (BcasAkun::where('email', $row['email'])->exists() || BcasAkun::where('nohp', $row['nohp'])->exists()) {
                 $this->addLogs('validasi-awal', $username, 'FAILED', 'Email / Nohp sudah terdaftar.');
@@ -146,6 +148,7 @@ class ExportNasabah extends Controller
                 $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                 $this->insertBcasNpwp($row, $username, $uuid);
                 $this->insertBcasKTP($row, $key, $username, $uuid);
+                $this->insertBcasPernyataan($row, $username, $uuid);
             }
         }
     }
@@ -218,6 +221,30 @@ class ExportNasabah extends Controller
             $this->addLogs('bca_nasabah_npwp', $username, 'SUCCESS', '-');
         } catch (QueryException $e) {
             $this->addLogs('bca_nasabah_npwp', $username, 'FAILED', $e->getMessage());
+        }
+    }
+
+    public function insertBcasPernyataan($data, $username, $uuid)
+    {
+
+        $no_pernyataan = [1, 11, 14, 16, 18, 20, 21, 100];
+
+
+
+        foreach ($no_pernyataan as $key => $value) {
+            $last_id = BcasPernyataan::max('id');
+
+            try {
+                BcasPernyataan::insert([
+                    'id' => ($last_id + 1),
+                    'id_user' => $uuid,
+                    'jawaban' => 'tidak',
+                    'master_pernyataan_id' => $value
+                ]);
+                $this->addLogs('bcas_nasabah_pernyataan', $username, 'SUCCESS', '-');
+            } catch (QueryException $e) {
+                $this->addLogs('bcas_nasabah_pernyataan', $username, 'FAILED', $e->getMessage());
+            }
         }
     }
 
