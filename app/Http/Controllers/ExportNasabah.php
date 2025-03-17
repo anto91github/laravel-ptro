@@ -9,6 +9,7 @@ use App\Models\BcasNasabahDomisili;
 use App\Models\BcasNasabahNpwp;
 use App\Models\BcasNasabahKTP;
 use App\Models\BcasPernyataan;
+use App\Models\BcasDataPekerjaan;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
