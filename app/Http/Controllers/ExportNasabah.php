@@ -116,6 +116,7 @@ class ExportNasabah extends Controller
                 ];
             }
         }
+
         // Menghapus elemen kosong
         $results = array_filter($results, function ($item) {
             return !is_null($item['email']) && !is_null($item['nohp']);
@@ -132,8 +133,8 @@ class ExportNasabah extends Controller
     {
         foreach ($data as $key => $row) {
             // insert into bcas_akun
-            $client_id = 'C' . $key;
-            $username = 'JKU-' . $client_id;
+            $client_id = strtoupper(Str::random(4));
+            $username = 'JKU' . $client_id;
             $uuid = (string) Str::uuid();
 
             if (BcasAkun::where('email', $row['email'])->exists() || BcasAkun::where('nohp', $row['nohp'])->exists()) {
@@ -142,8 +143,8 @@ class ExportNasabah extends Controller
                 $this->addLogs('validasi-awal', $username, 'FAILED', 'NIK sudah terdaftar');
             } else {
                 $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
-                $this->insertBcasNasabahDomisili($row, $key, $uuid);
-                $this->insertBcasNpwp($data, $username, $uuid);
+                $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
+                $this->insertBcasNpwp($row, $username, $uuid);
             }
         }
     }
@@ -176,7 +177,7 @@ class ExportNasabah extends Controller
                 'status' => 1,
                 'verifikasi_nohp' => true,
                 'verifikasi_email' => true,
-                'id_device' => 'b8f56805-35b7-4b84-a350-d75cd35e9e9f',
+                'id_device' => $uuid,
                 'state' => 10,
                 'sync_best' => false,
                 'client_id' => $client_id,
@@ -192,14 +193,16 @@ class ExportNasabah extends Controller
 
     public function insertBcasNpwp($data, $username, $uuid)
     {
+
         $validate = false;
         $no_npwp = '';
 
-        if ($data['is_npwp'] = 'Ada (Pribadi)') {
+        if ($data['is_npwp'] == 'Ada (Pribadi)') {
             $validate = true;
+            $no_npwp = $data['nik'];
         }
 
-        if (strlen($data['npwp_no']) > 13) {
+        if ($data['is_npwp'] == 'Ada (Orang Lain)') {
             $no_npwp = $data['npwp_no'];
         }
 
