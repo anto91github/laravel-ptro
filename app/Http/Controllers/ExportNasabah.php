@@ -145,6 +145,7 @@ class ExportNasabah extends Controller
                 $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
                 $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                 $this->insertBcasNpwp($row, $username, $uuid);
+                $this->insertBcasKTP($row, $key, $username, $uuid);
             }
         }
     }
@@ -167,8 +168,8 @@ class ExportNasabah extends Controller
         try {
             BcasAkun::create([
                 'id' => $uuid,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-                'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                // 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                // 'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
                 'deleted' => false,
                 'email' => $data['email'],
                 'nohp' => $data['nohp'],
@@ -237,6 +238,44 @@ class ExportNasabah extends Controller
             $this->addLogs('bca_nasabah_domisili', $username, 'SUCCESS', '-');
         } catch (QueryException $e) {
             $this->addLogs('bca_nasabah_domisili', $username, 'FAILED', $e->getMessage());
+        }
+    }
+
+    public function insertBcasKTP($data, $key, $username, $uuid)
+    {
+        try {
+            BcasNasabahKTP::create([
+                'id' => $uuid,
+                'nik' => $data['nik'],
+                'nama_lengkap' => $data['nama_lengkap'],
+                'tempat_lahir' => $data['tempat_lahir'],
+                'tanggal_lahir' => $data['tanggal_lahir'],
+                'jenis_kelamin' => $data['jenis_kelamin'],
+                'status_perkawinan' => $data['status_perkawinan'],
+                'agama' => $data['agama'],
+                'alamat' => $data['alamat_ktp'],
+                'rt' => $data['rt_ktp'],
+                'rw' => $data['rw_ktp'],
+                'id_kota' => $data['kota_ktp'],
+                'id_provinsi' => $data['provinsi_ktp'],
+                'kodepos' => $data['kode_pos_ktp'],
+                'nama_ibu_kandung' => $data['nama_ibu_kandung'],
+                'kecamatan' => $data['kecamatan_ktp'],
+                'kelurahan' => $data['kelurahan_ktp'],
+                'jumlah_tanggungan' => $data['jumlah_tanggungan'],
+                'nama_pasangan' => $data['nama_pasangan'],
+                'no_telp_pasangan' => $data['no_telp_pasangan'],
+                'negara_lahir' => $data['negara_lahir'],
+                'pendidikan_terakhir' => $data['pendidikan_terakhir'],
+                'verified_ktp' => 'REGISTERED',
+                'valid_ktp' => false,
+                'valid_selfie' => false,
+                'valid_ktp_bca' => false,
+                'valid_ktp_disdukcapil' => false
+            ]);
+            $this->addLogs('bcas_nasabah_ktp', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bcas_nasabah_ktp', $username, 'FAILED', $e->getMessage());
         }
     }
 }
