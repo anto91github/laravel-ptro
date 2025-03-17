@@ -135,24 +135,26 @@ class ExportNasabah extends Controller
     public function insertData($data)
     {
         foreach ($data as $key => $row) {
-            // insert into bcas_akun
             $client_id = strtoupper(Str::random(4));
             $username = 'JKU' . $client_id;
-            $uuid = (string) Str::uuid();;
-
+            $uuid = (string) Str::uuid();
 
             if (BcasAkun::where('email', $row['email'])->exists() || BcasAkun::where('nohp', $row['nohp'])->exists()) {
                 $this->addLogs('validasi-awal', $username, 'FAILED', 'Email / Nohp sudah terdaftar.');
             } else if (BcasNasabahKTP::where('nik', $row['nik'])->exists()) {
                 $this->addLogs('validasi-awal', $username, 'FAILED', 'NIK sudah terdaftar');
             } else {
-                $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
-                $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
-                $this->insertBcasNpwp($row, $username, $uuid);
-                $this->insertBcasKTP($row, $key, $username, $uuid);
-                $this->insertDataPekerjaan($row, $username, $uuid);
-                $this->insertBcasPernyataan($row, $username, $uuid);
-                $this->insertBcasBO($row, $username, $uuid);
+                $result_insert_bcasAkun = false;
+                $result_insert_bcasAkun = $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
+
+                if($result_insert_bcasAkun == true){
+                    $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
+                    $this->insertBcasNpwp($row, $username, $uuid);
+                    $this->insertBcasKTP($row, $key, $username, $uuid);
+                    $this->insertDataPekerjaan($row, $username, $uuid);
+                    $this->insertBcasPernyataan($row, $username, $uuid);
+                    $this->insertBcasBO($row, $username, $uuid);
+                }
             }
         }
     }
@@ -194,8 +196,10 @@ class ExportNasabah extends Controller
                 'source_platform' => 'Web BCAS'
             ]);
             $this->addLogs('bcas_akun', $username, 'SUCCESS', '-');
+            return true;
         } catch (QueryException $e) {
             $this->addLogs('bcas_akun', $username, 'FAILED', $e->getMessage());
+            return false;
         }
     }
 
