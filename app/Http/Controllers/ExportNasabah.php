@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\BcasAkun;
+use App\Models\BcasNasabahBO;
 use App\Models\BcasNasabahDomisili;
 use App\Models\BcasNasabahNpwp;
 use App\Models\BcasNasabahKTP;
@@ -149,6 +150,7 @@ class ExportNasabah extends Controller
                 $this->insertBcasNpwp($row, $username, $uuid);
                 $this->insertBcasKTP($row, $key, $username, $uuid);
                 $this->insertBcasPernyataan($row, $username, $uuid);
+                $this->insertBcasBO($row, $username, $uuid);
             }
         }
     }
@@ -229,8 +231,6 @@ class ExportNasabah extends Controller
 
         $no_pernyataan = [1, 11, 14, 16, 18, 20, 21, 100];
 
-
-
         foreach ($no_pernyataan as $key => $value) {
             $last_id = BcasPernyataan::max('id');
 
@@ -245,6 +245,21 @@ class ExportNasabah extends Controller
             } catch (QueryException $e) {
                 $this->addLogs('bcas_nasabah_pernyataan', $username, 'FAILED', $e->getMessage());
             }
+        }
+    }
+
+    public function insertBcasBO($data, $username, $uuid)
+    {
+        try {
+            BcasNasabahBO::create([
+                'id' => $uuid,
+                'deleted' => false,
+                'is_nasabah_bo' => false,
+                'created_at' => now()
+            ]);
+            $this->addLogs('bcas_nasabah_beneficiary_owner', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bcas_nasabah_beneficiary_owner', $username, 'FAILED', $e->getMessage());
         }
     }
 
