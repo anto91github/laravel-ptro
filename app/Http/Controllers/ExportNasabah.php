@@ -12,6 +12,7 @@ use App\Models\BcasPernyataan;
 use App\Models\BcasDataPekerjaan;
 use App\Models\BcasNasabahRekening;
 use App\Models\BcaAhliWaris;
+use App\Models\BcasNasabahTTD;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
@@ -150,14 +151,15 @@ class ExportNasabah extends Controller
                 $result_insert_bcasAkun = $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
 
                 if($result_insert_bcasAkun == true){
-                    $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
+                    /*$this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                     $this->insertBcasNpwp($row, $username, $uuid);
                     $this->insertBcasKTP($row, $key, $username, $uuid);
                     $this->insertDataPekerjaan($row, $username, $uuid);                    
                     $this->insertBcasPernyataan($row, $username, $uuid);
                     $this->insertBcasBO($row, $username, $uuid);
                     $this->insertNasabahRekening($row, $username, $uuid);
-                    $this->insertAhliWaris($row, $username, $uuid);
+                    $this->insertAhliWaris($row, $username, $uuid);*/
+                    $this->insertTTDNasabah($row, $username, $uuid);
                 }
             }
         }
@@ -410,4 +412,16 @@ class ExportNasabah extends Controller
             $this->addLogs('bca_nasabah_ahli_waris', $username, 'FAILED', $e->getMessage());
         }
     }
+
+    public function insertTTDNasabah($data, $username, $uuid){
+        try{
+            BcasNasabahTTD::create([
+                'id' => $uuid
+            ]);
+            $this->addLogs('bcas_nasabah_ttd', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bcas_nasabah_ttd', $username, 'FAILED', $e->getMessage());
+        }
+    }
+    
 }
