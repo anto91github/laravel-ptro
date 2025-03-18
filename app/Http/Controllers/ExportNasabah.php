@@ -11,6 +11,7 @@ use App\Models\BcasNasabahKTP;
 use App\Models\BcasPernyataan;
 use App\Models\BcasDataPekerjaan;
 use App\Models\BcasNasabahRekening;
+use App\Models\BcaAhliWaris;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
@@ -156,6 +157,7 @@ class ExportNasabah extends Controller
                     $this->insertBcasPernyataan($row, $username, $uuid);
                     $this->insertBcasBO($row, $username, $uuid);
                     $this->insertNasabahRekening($row, $username, $uuid);
+                    $this->insertAhliWaris($row, $username, $uuid);
                 }
             }
         }
@@ -387,6 +389,25 @@ class ExportNasabah extends Controller
             $this->addLogs('bcas_nasabah_rekening', $username, 'SUCCESS', '-');
         } catch (QueryException $e) {
             $this->addLogs('bcas_nasabah_rekening', $username, 'FAILED', $e->getMessage());
+        }
+    }
+
+    public function insertAhliWaris($data, $username, $uuid) {
+        try{
+            $latestId = BcaAhliWaris::max('id');
+            $newId = $latestId + 1;
+
+            BcaAhliWaris::create([
+                'id' => $newId,
+                'user_id' => $uuid,
+                'nama' => $data['nama_ahli_waris'],
+                'hubungan' => $data['hubungan_ahli_waris'],
+                'phone' => $data['tlp_alih_waris']
+            ]);
+
+            $this->addLogs('bca_nasabah_ahli_waris', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bca_nasabah_ahli_waris', $username, 'FAILED', $e->getMessage());
         }
     }
 }
