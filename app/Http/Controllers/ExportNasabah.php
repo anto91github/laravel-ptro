@@ -13,6 +13,7 @@ use App\Models\BcasDataPekerjaan;
 use App\Models\BcasNasabahRekening;
 use App\Models\BcaAhliWaris;
 use App\Models\BcasNasabahTTD;
+use App\Models\BcaInstruksiKhusus;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
@@ -142,24 +143,27 @@ class ExportNasabah extends Controller
             $username = 'JKU' . $client_id;
             $uuid = (string) Str::uuid();
 
-            if (BcasAkun::where('email', $row['email'])->exists() || BcasAkun::where('nohp', $row['nohp'])->exists()) {
-                $this->addLogs('validasi-awal', $username, 'FAILED', 'Email / Nohp sudah terdaftar.');
-            } else if (BcasNasabahKTP::where('nik', $row['nik'])->exists()) {
-                $this->addLogs('validasi-awal', $username, 'FAILED', 'NIK sudah terdaftar');
+            if (BcasAkun::where('email', $row['email'])->exists()) {
+                $this->addLogs('validasi-awal', $username, 'FAILED', 'Email '.$row['email'].' sudah terdaftar.');
+            }else if (BcasAkun::where('nohp', $row['nohp'])->exists()) {
+                $this->addLogs('validasi-awal', $username, 'FAILED', 'No Hp '.$row['nohp'].' sudah terdaftar.');
+            }else if (BcasNasabahKTP::where('nik', $row['nik'])->exists()) {
+                $this->addLogs('validasi-awal', $username, 'FAILED', 'NIK '.$row['nik'].' sudah terdaftar');
             } else {
                 $result_insert_bcasAkun = false;
                 $result_insert_bcasAkun = $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
 
                 if($result_insert_bcasAkun == true){
-                    /*$this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
+                    $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                     $this->insertBcasNpwp($row, $username, $uuid);
                     $this->insertBcasKTP($row, $key, $username, $uuid);
                     $this->insertDataPekerjaan($row, $username, $uuid);                    
                     $this->insertBcasPernyataan($row, $username, $uuid);
                     $this->insertBcasBO($row, $username, $uuid);
                     $this->insertNasabahRekening($row, $username, $uuid);
-                    $this->insertAhliWaris($row, $username, $uuid);*/
-                    $this->insertTTDNasabah($row, $username, $uuid);
+                    $this->insertInstruksiKhusus($row, $username, $uuid);
+                    $this->insertAhliWaris($row, $username, $uuid);
+                    $this->insertTTDNasabah($row, $username, $uuid);                    
                 }
             }
         }
@@ -394,23 +398,73 @@ class ExportNasabah extends Controller
         }
     }
 
-    public function insertAhliWaris($data, $username, $uuid) {
-        try{
-            $latestId = BcaAhliWaris::max('id');
-            $newId = $latestId + 1;
+    public function insertInstruksiKhusus($data, $username, $uuid)
+    {
+        $nama_bank = $data['nama_bank_tujuan'];
+        $tipe_membership;
+        $id_fitur;
 
-            BcaAhliWaris::create([
-                'id' => $newId,
-                'user_id' => $uuid,
-                'nama' => $data['nama_ahli_waris'],
-                'hubungan' => $data['hubungan_ahli_waris'],
-                'phone' => $data['tlp_alih_waris']
-            ]);
-
-            $this->addLogs('bca_nasabah_ahli_waris', $username, 'SUCCESS', '-');
-        } catch (QueryException $e) {
-            $this->addLogs('bca_nasabah_ahli_waris', $username, 'FAILED', $e->getMessage());
+        if($data['nama_bank_tujuan'] == 'blu') {
+            $nama_bank = 'BCAD';
         }
+
+        if($data['nama_bank_tujuan'] == 'BCA') {
+            //check membership
+            if($data['tipe_membership_bca'] == 'PRIORITAS') {
+                $tipe_membership = 3;
+                $id_fitur = 'be9c770e-a799-42f7-865c-8b26bd8d3174';
+            } else if($data['tipe_membership_bca'] == 'SOLITAIRE') {
+                $tipe_membership = 4;
+                $id_fitur = '197dffb9-ecf5-45d2-a55d-f89baec498b6';
+            } else {
+                $tipe_membership = 5;
+                $id_fitur = 'd8030c2c-29f9-4e36-a203-32633ac8d4b6';
+            }
+        } else if($data['nama_bank_tujuan'] == 'blu') {
+            $tipe_membership = 5;
+            $id_fitur = 'd8030c2c-29f9-4e36-a203-32633ac8d4b6';
+        }
+
+        try{
+            BcaInstruksiKhusus::create([
+                'id' => $uuid,
+                'suber_info' => 'Referral',
+                'kode_referal' => 'BonusPTRO', // dummy sementara
+                'nama_bank_tujuan' => $nama_bank,
+                'no_rekeing_tujuan' => $data['no_rekening_tujuan'],
+                'nama_rekeing_tujuan' => $data['nama_rekening_tujuan'],
+                'email_laporan_transaksi' => $data['email'],
+                'instruksi_pembayaran' => 0,
+                'id_fitur_sekuritas' => $id_fitur,
+                'tipe_membership' => $tipe_membership,
+                'fasilitas_transaksi' => 'Online'
+            ]);
+            $this->addLogs('bca_nasabah_instruksi_khusus', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bca_nasabah_instruksi_khusus', $username, 'FAILED', $e->getMessage());
+        } 
+    }
+
+    public function insertAhliWaris($data, $username, $uuid) {
+        if($data['nama_ahli_waris'] != NULL && $data['hubungan_ahli_waris']!= NULL && $data['tlp_alih_waris']!= NULL) {
+            try{
+                $latestId = BcaAhliWaris::max('id');
+                $newId = $latestId + 1;
+    
+                BcaAhliWaris::create([
+                    'id' => $newId,
+                    'user_id' => $uuid,
+                    'nama' => $data['nama_ahli_waris'],
+                    'hubungan' => $data['hubungan_ahli_waris'],
+                    'phone' => $data['tlp_alih_waris']
+                ]);
+    
+                $this->addLogs('bca_nasabah_ahli_waris', $username, 'SUCCESS', '-');
+            } catch (QueryException $e) {
+                $this->addLogs('bca_nasabah_ahli_waris', $username, 'FAILED', $e->getMessage());
+            }
+        }
+        
     }
 
     public function insertTTDNasabah($data, $username, $uuid){
