@@ -159,7 +159,7 @@ class ExportNasabah extends Controller
                     $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                     $this->insertBcasNpwp($row, $username, $uuid);
                     $this->insertBcasKTP($row, $key, $username, $uuid);
-                    $this->insertDataPekerjaan($row, $username, $uuid);                    
+                    $this->insertDataPekerjaan($row, $username, $uuid);                   
                     $this->insertBcasPernyataan($row, $username, $uuid);
                     $this->insertBcasBO($row, $username, $uuid);
                     $this->insertNasabahRekening($row, $username, $uuid);
@@ -255,10 +255,15 @@ class ExportNasabah extends Controller
 
         foreach ($no_pernyataan as $key => $value) {
             $last_id = BcasPernyataan::max('id');
-
+            if($key == 0) {
+                $next_id = $last_id + 20;
+            } else {
+                $next_id = $last_id + 1;
+            }
+            
             try {
                 BcasPernyataan::insert([
-                    'id' => ($last_id + 1),
+                    'id' => ($next_id),
                     'id_user' => $uuid,
                     'jawaban' => 'tidak',
                     'master_pernyataan_id' => $value
@@ -455,7 +460,7 @@ class ExportNasabah extends Controller
         if($data['nama_ahli_waris'] != NULL && $data['hubungan_ahli_waris']!= NULL && $data['tlp_alih_waris']!= NULL) {
             try{
                 $latestId = BcaAhliWaris::max('id');
-                $newId = $latestId + 1;
+                $newId = $latestId + 20;
     
                 BcaAhliWaris::create([
                     'id' => $newId,
