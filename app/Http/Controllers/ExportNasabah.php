@@ -14,6 +14,8 @@ use App\Models\BcasNasabahRekening;
 use App\Models\BcaAhliWaris;
 use App\Models\BcasNasabahTTD;
 use App\Models\BcaInstruksiKhusus;
+use App\Models\BcasDataTambahan;
+use App\Models\SyncIntegration;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
@@ -163,7 +165,10 @@ class ExportNasabah extends Controller
                     $this->insertNasabahRekening($row, $username, $uuid);
                     $this->insertInstruksiKhusus($row, $username, $uuid);
                     $this->insertAhliWaris($row, $username, $uuid);
-                    $this->insertTTDNasabah($row, $username, $uuid);                    
+                    $this->insertTTDNasabah($row, $username, $uuid);
+                    $this->insertDataTambahan($row, $username, $uuid);
+                    $this->insertSyncIntegration($row, $username, $uuid, $client_id);
+
                 }
             }
         }
@@ -200,6 +205,7 @@ class ExportNasabah extends Controller
                 'id_device' => $uuid,
                 'state' => 10,
                 'sync_best' => false,
+                'status_approval' => 0,
                 'client_id' => $client_id,
                 'token_best' => $token_best,
                 'platform' => 'web',
@@ -477,5 +483,42 @@ class ExportNasabah extends Controller
             $this->addLogs('bcas_nasabah_ttd', $username, 'FAILED', $e->getMessage());
         }
     }
+
+    public function insertDataTambahan($data, $username, $uuid)
+    {
+        try{
+            BcasDataTambahan::create([
+                'id' => $uuid,
+                'usaha_luar_negri' => false,
+                'kartu_kredit_lain' => false,
+                'lama_tahun' => 0
+            ]);
+
+            $this->addLogs('bcas_nasabah_data_tambahan', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('bcas_nasabah_data_tambahan', $username, 'FAILED', $e->getMessage());
+        }
+    }
     
+    public function insertSyncIntegration($data, $username, $uuid, $client_id)
+    {
+        try{
+            SyncIntegration::create([
+                'id' => $uuid,
+                'deleted' => false,
+                'no_cif' => $client_id,
+                'nik' => $data['nik'],
+                'name' => $data['nama_lengkap'],
+                'sas' => false,
+                'best' => false,
+                'sync' => false,
+                'status' => 0,
+                'last_update' => Carbon::now()->format('Y-m-d H:i:s')
+            ]);
+
+            $this->addLogs('synchronize_integration', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('synchronize_integration', $username, 'FAILED', $e->getMessage());
+        }
+    }
 }
