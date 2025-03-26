@@ -16,6 +16,10 @@ use App\Models\BcasNasabahTTD;
 use App\Models\BcaInstruksiKhusus;
 use App\Models\BcasDataTambahan;
 use App\Models\SyncIntegration;
+use App\Models\CmsMasterAccount;
+use App\Models\MasterProvinsi;
+use App\Models\CmsRiskAssessment;
+use App\Models\CmsWatchList;
 use App\Models\ExportLog;
 
 use Maatwebsite\Excel\Facades\Excel;
@@ -156,7 +160,7 @@ class ExportNasabah extends Controller
                 $result_insert_bcasAkun = $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
 
                 if($result_insert_bcasAkun == true){
-                    $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
+                    /*$this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                     $this->insertBcasNpwp($row, $username, $uuid);
                     $this->insertBcasKTP($row, $key, $username, $uuid);
                     $this->insertDataPekerjaan($row, $username, $uuid);                   
@@ -167,8 +171,11 @@ class ExportNasabah extends Controller
                     $this->insertAhliWaris($row, $username, $uuid);
                     $this->insertTTDNasabah($row, $username, $uuid);
                     $this->insertDataTambahan($row, $username, $uuid);
-                    $this->insertSyncIntegration($row, $username, $uuid, $client_id);
-
+                    $this->insertSyncIntegration($row, $username, $uuid, $client_id);*/
+                    $riskScore = $this->countRiskScore($row);
+                    // $this->insertRiskAssessment($row, $username, $uuid, $client_id, $riskScore);
+                    $this->insertCmsMasterAccount($row, $username, $uuid, $client_id, $riskScore);
+                    
                 }
             }
         }
@@ -524,6 +531,125 @@ class ExportNasabah extends Controller
             $this->addLogs('synchronize_integration', $username, 'SUCCESS', '-');
         } catch (QueryException $e) {
             $this->addLogs('synchronize_integration', $username, 'FAILED', $e->getMessage());
+        }
+    }
+
+    public function countRiskScore($data)
+    {
+        $score = 0;
+
+        $occupationRisk = 7.01; // karyawan swasta
+        $productRisk = 7.449999809265137; // saham
+        $channelRisk = 3; // Online
+        $countryRisk = 3; // Indonesia
+        $regionRisk = MasterProvinsi::find($data['provinsi_domisili'])->ra;
+
+        $score = $occupationRisk + $productRisk + $channelRisk + $countryRisk + $regionRisk;        
+
+        return $score / 5;
+    }
+
+    public function insertRiskAssessment($data, $username, $uuid, $client_id, $riskScore)
+    {
+        $risk_level;
+        if($riskScore >= 3 and $riskScore <= 4.9999) {
+            $risk_level = 0;
+        } else if ($riskScore >= 5 and $riskScore <= 7) {
+            $risk_level = 1;
+        } else if ($riskScore >= 7.0001 and $riskScore <= 9) {
+            $risk_level = 2;
+        }
+        $is_watchlist = CmsWatchList::where('nama', $data['nama_lengkap'])->first();
+
+
+        try{
+            CmsRiskAssessment::create([
+                'id' => (string) Str::uuid(),
+                'deleted' => false,
+                'nama' => $data['nama_lengkap'],
+                'client_code' => $client_id,
+                'id_occupation' => 9, // pegawai swasta
+                'id_product_service' => 8787,
+                'id_delivery_channel' => 1, // OLT
+                'id_province' => $data['provinsi_domisili'],
+                'id_country' => 101,
+                'pep' => false,
+                'watchlist' => $is_watchlist ? $is_watchlist : false,
+                'risk_level' => $risk_level,
+                'risk_score' => $riskScore,
+            ]);
+
+            $this->addLogs('cms_risk_assessment', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('cms_risk_assessment', $username, 'FAILED', $e->getMessage());
+        }
+    }
+
+    public function insertCmsMasterAccount($data, $username, $uuid, $client_id, $riskScore)
+    {
+        if($data['nama_bank_tujuan'] == 'blu') {
+            $nama_bank = 'BCAD';
+            $bank_cn = "501";
+            $payment_receipt = "BLU01";
+        } else {
+            $nama_bank = 'BCA';
+            $bank_cn = "014";
+            $payment_receipt = "BCA14";
+        }
+
+        if($data['nama_bank_tujuan'] == 'BCA') {
+            //check membership
+            if($data['tipe_membership_bca'] == 'PRIORITAS') {
+                $commision = "PRIORITAS";
+                $limit = 50000000;
+            } else if($data['tipe_membership_bca'] == 'SOLITAIRE') {
+                $commision = "SOLITAIRE";
+                $limit = 500000000;              
+            } else {
+                $commision = "REGULAR";
+                $limit = 10000000;        
+            }
+        } else if($data['nama_bank_tujuan'] == 'blu') {
+            $commision = "REGULAR";
+            $limit = 10000000;
+        }
+
+        if($riskScore >= 3 and $riskScore <= 4.9999) {
+            $jenis_resiko_nasabah = "LOW";
+        } else if ($riskScore >= 5 and $riskScore <= 7) {
+            $jenis_resiko_nasabah = "MEDIUM";
+        } else if ($riskScore >= 7.0001 and $riskScore <= 9) {
+            $jenis_resiko_nasabah = "HIGH";
+        }
+
+        $latestId = CmsMasterAccount::max('id');
+        $newId = $latestId + 20;
+
+        try{
+            CmsMasterAccount::create([
+                'id' => $newId,
+                'deleted' => false,
+                'bank_cn' => $bank_cn,
+                'format_nama_nasabah' => $data['nama_lengkap'],
+                'agen' => "SQ",
+                'monthly_fee' => "Rp. 16.500",
+                'currency_rdn' => "IDR",
+                'nama_bank' => $nama_bank,
+                'payment_receipt' => $payment_receipt,
+                'otc' => "05",
+                'jenis_resiko_nasabah' => $jenis_resiko_nasabah,
+                'poem_id' => $username,
+                'client_id' => $client_id,
+                'commission' => $commision,
+                'sales_id' => 232, // Online
+                'limit_nasabah' => $limit,
+                'nama_rdn_nasabah' => $data['nama_lengkap'],
+                'no_sub' => "04"
+            ]);
+
+            $this->addLogs('cms_master_account', $username, 'SUCCESS', '-');
+        } catch (QueryException $e) {
+            $this->addLogs('cms_master_account', $username, 'FAILED', $e->getMessage());
         }
     }
 }
