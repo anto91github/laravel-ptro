@@ -9,6 +9,7 @@ use App\Models\BcasNasabahDomisili;
 use App\Models\BcasNasabahNpwp;
 use App\Models\BcasNasabahKTP;
 use App\Models\BcasPernyataan;
+use App\Models\LogsPernyataan;
 use App\Models\BcasDataPekerjaan;
 use App\Models\BcasNasabahRekening;
 use App\Models\BcaAhliWaris;
@@ -18,6 +19,7 @@ use App\Models\BcasDataTambahan;
 use App\Models\SyncIntegration;
 use App\Models\CmsMasterAccount;
 use App\Models\MasterProvinsi;
+use App\Models\MasterKabupatenKota;
 use App\Models\CmsRiskAssessment;
 use App\Models\CmsWatchList;
 use App\Models\ExportLog;
@@ -160,20 +162,21 @@ class ExportNasabah extends Controller
                 $result_insert_bcasAkun = $this->insertBcasAkun($row, $key, $client_id, $username, $uuid);
 
                 if($result_insert_bcasAkun == true){
-                    /*$this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
+                    $this->insertBcasNasabahDomisili($row, $key, $username, $uuid);
                     $this->insertBcasNpwp($row, $username, $uuid);
                     $this->insertBcasKTP($row, $key, $username, $uuid);
                     $this->insertDataPekerjaan($row, $username, $uuid);                   
                     $this->insertBcasPernyataan($row, $username, $uuid);
+                    $this->insertLogsPernyataan($row, $username, $uuid);
                     $this->insertBcasBO($row, $username, $uuid);
                     $this->insertNasabahRekening($row, $username, $uuid);
                     $this->insertInstruksiKhusus($row, $username, $uuid);
                     $this->insertAhliWaris($row, $username, $uuid);
                     $this->insertTTDNasabah($row, $username, $uuid);
                     $this->insertDataTambahan($row, $username, $uuid);
-                    $this->insertSyncIntegration($row, $username, $uuid, $client_id);*/
+                    $this->insertSyncIntegration($row, $username, $uuid, $client_id);
                     $riskScore = $this->countRiskScore($row);
-                    // $this->insertRiskAssessment($row, $username, $uuid, $client_id, $riskScore);
+                    $this->insertRiskAssessment($row, $username, $uuid, $client_id, $riskScore);
                     $this->insertCmsMasterAccount($row, $username, $uuid, $client_id, $riskScore);
                     
                 }
@@ -279,6 +282,159 @@ class ExportNasabah extends Controller
             } catch (QueryException $e) {
                 $this->addLogs('bcas_nasabah_pernyataan', $username, 'FAILED', $e->getMessage());
             }
+        }
+    }
+
+    public function insertLogsPernyataan($data, $username, $uuid)
+    {
+        $namaProvinsi = MasterProvinsi::find($data['provinsi_ktp'])->nama_provinsi;
+        $namaKota = MasterKabupatenKota::find($data['kota_ktp'])->nama_kota;
+
+        $dataKtp = [
+            "nik"=> $data['nik'],
+            "nama_lengkap"=> $data['nama_lengkap'],
+            "negara_lahir"=> $data['negara_lahir'],
+            "tempat_lahir" => $data['tempat_lahir'],
+            "tanggal_lahir"=> $data['tanggal_lahir'],
+            "jenis_kelamin" => $data['jenis_kelamin'],
+            "status_perkawinan" => $data['status_perkawinan'],
+            "agama" => $data['agama'],
+            "alamat" => $data['alamat_ktp'],
+            "rt" => $data['rt_ktp'],
+            "rw" => $data['rw_ktp'],
+            "kelurahan" => $data['kelurahan_ktp'],
+            "kecamatan" => $data['kecamatan_ktp'],
+            "kota" => $namaKota,
+            "provinsi" => $namaProvinsi,
+            "kode_pos" => $data['kode_pos_ktp'],
+            "nama_ibu_kandung" => $data['nama_ibu_kandung'],
+            // "image_ktp" => NULL
+            // "image_selfie": "NOT_SELFIE",
+            "nama_pasangan" => $data['nama_pasangan'],
+            "no_telp_pasangan"=> $data['no_telp_pasangan'],
+            "jumlah_tanggungan" => $data['jumlah_tanggungan'],
+            "pendidikan_terakhir"=> $data['pendidikan_terakhir']
+            // "valid_blu": null
+        ];
+        $dataKtpJson = json_encode($dataKtp);
+
+        $dataPernyataan = [
+            ['id_pernyataan' => 1, 'jawaban' => 'tidak'],
+            ['id_pernyataan' => 11, 'jawaban' => 'tidak'],
+            ['id_pernyataan' => 14, 'jawaban' => 'tidak'],
+            ['id_pernyataan' => 16, 'jawaban' => 'tidak'],
+            ['id_pernyataan' => 18, 'jawaban' => 'tidak'],
+            ['id_pernyataan' => 20, 'jawaban' => 'tidak'],
+            ['id_pernyataan' => 21, 'jawaban' => 'tidak'],
+            ['id_pernyataan' => 100, 'jawaban' => 'tidak']
+        ];
+        $dataPernyataanJson = json_encode($dataPernyataan);
+
+        $dataTNC = [
+            'approve_items' => [
+                [
+                    'pernyataan' => 'Perjanjian Pembukaan Rekening Efek',
+                    'jawaban' => 'setuju'
+                ],
+                [
+                    'pernyataan' => 'Pernyataan Nasabah Ringkasan Informasi Produk dan Layanan (RIPLAY)',
+                    'jawaban' => 'setuju'
+                ],
+                [
+                    'pernyataan' => 'Pernyataan Nasabah Pembukaan Rekening Dana Nasabah (RDN)',
+                    'jawaban' => 'setuju'
+                ],
+                [
+                    'pernyataan' => 'Ketentuan Tambahan Pembukaan Rekening Dana Nasabah (RDN)',
+                    'jawaban' => 'setuju'
+                ],
+                [
+                    'pernyataan' => 'Pernyataan Nasabah Perpajakan Individu Nasabah',
+                    'jawaban' => 'setuju'
+                ]
+            ]
+        ];
+        $dataTNCJson = json_encode($dataTNC);
+
+
+        try {
+            LogsPernyataan::insert([
+                'id' => (string) Str::uuid(),
+                'user_id' => $uuid,
+                'username' => $username,
+                'type' => "KTP_AGREEMENT_ADD",
+                'ip_address' => "192.168.1.1",
+                'data' => $dataKtpJson,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s')               
+            ]);
+            $this->addLogs('logs_pernyataan KTP_AGREEMENT_ADD', $username, 'SUCCESS', '-');
+            
+        } catch (QueryException $e) {
+            $this->addLogs('logs_pernyataan KTP_AGREEMENT_ADD', $username, 'FAILED', $e->getMessage());
+        }
+
+        try {
+            LogsPernyataan::insert([
+                'id' => (string) Str::uuid(),
+                'user_id' => $uuid,
+                'username' => $username,
+                'type' => "KTP_AGREEMENT_UPDATE",
+                'ip_address' => "192.168.1.1",
+                'data' => $dataKtpJson,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s')               
+            ]);
+            $this->addLogs('logs_pernyataan KTP_AGREEMENT_UPDATE', $username, 'SUCCESS', '-');
+            
+        } catch (QueryException $e) {
+            $this->addLogs('logs_pernyataan KTP_AGREEMENT_UPDATE', $username, 'FAILED', $e->getMessage());
+        }
+
+        try {
+            LogsPernyataan::insert([
+                'id' => (string) Str::uuid(),
+                'user_id' => $uuid,
+                'username' => $username,
+                'type' => "INVESTASI_AGREEMENT",
+                'ip_address' => "192.168.1.1",
+                'data' => $dataPernyataanJson,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s')               
+            ]);
+            $this->addLogs('logs_pernyataan INVESTASI_AGREEMENT', $username, 'SUCCESS', '-');
+            
+        } catch (QueryException $e) {
+            $this->addLogs('logs_pernyataan INVESTASI_AGREEMENT', $username, 'FAILED', $e->getMessage());
+        }
+
+        try {
+            LogsPernyataan::insert([
+                'id' => (string) Str::uuid(),
+                'user_id' => $uuid,
+                'username' => $username,
+                'type' => "TNC_AGREEMENT",
+                'ip_address' => "192.168.1.1",
+                'data' => $dataTNCJson,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s')               
+            ]);
+            $this->addLogs('logs_pernyataan TNC_AGREEMENT', $username, 'SUCCESS', '-');
+            
+        } catch (QueryException $e) {
+            $this->addLogs('logs_pernyataan TNC_AGREEMENT', $username, 'FAILED', $e->getMessage());
+        }
+
+        try {
+            LogsPernyataan::insert([
+                'id' => (string) Str::uuid(),
+                'user_id' => $uuid,
+                'username' => $username,
+                'type' => "TTD_AGREEMENT",
+                'ip_address' => "192.168.1.1",
+                'data' => NULL,
+                'created_at' => Carbon::now()->format('Y-m-d H:i:s')               
+            ]);
+            $this->addLogs('logs_pernyataan TTD_AGREEMENT', $username, 'SUCCESS', '-');
+            
+        } catch (QueryException $e) {
+            $this->addLogs('logs_pernyataan TTD_AGREEMENT', $username, 'FAILED', $e->getMessage());
         }
     }
 
